@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${participants
                   .map(
                     (p) =>
-                      `<li><span class="participant-email">${p}</span><button class="remove-participant" data-email="${p}" data-activity="${name}" title="Remove">✕</button></li>`
+                      `<li><span class="participant-email">${p}</span><button class="remove-participant" data-email="${p}" data-activity="${name}" title="Remove">🗑️</button></li>`
                   )
                   .join("")}
               </ul>
