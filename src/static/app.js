@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
-        // Build participants HTML (bulleted list or empty message)
+        // Build participants HTML (unstyled list with remove buttons or empty message)
         const participants = details.participants || [];
         let participantsHTML = "";
         if (participants.length > 0) {
@@ -28,7 +28,12 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="participants">
               <h5>Participants</h5>
               <ul class="participants-list">
-                ${participants.map((p) => `<li>${p}</li>`).join("")}
+                ${participants
+                  .map(
+                    (p) =>
+                      `<li><span class="participant-email">${p}</span><button class="remove-participant" data-email="${p}" data-activity="${name}" title="Remove">✕</button></li>`
+                  )
+                  .join("")}
               </ul>
             </div>
           `;
@@ -56,6 +61,44 @@ document.addEventListener("DOMContentLoaded", () => {
         option.value = name;
         option.textContent = name;
         activitySelect.appendChild(option);
+        // Attach remove handlers for participant buttons inside this activity card
+        activityCard.querySelectorAll('.remove-participant').forEach((btn) => {
+          btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = btn.getAttribute('data-email');
+            const activityName = btn.getAttribute('data-activity');
+
+            try {
+              const resp = await fetch(
+                `/activities/${encodeURIComponent(activityName)}/participants?email=${encodeURIComponent(email)}`,
+                { method: 'DELETE' }
+              );
+
+              const result = await resp.json();
+
+              if (resp.ok) {
+                messageDiv.textContent = result.message;
+                messageDiv.className = 'success';
+                messageDiv.classList.remove('hidden');
+                // Refresh activities list to reflect removal
+                fetchActivities();
+              } else {
+                messageDiv.textContent = result.detail || 'Failed to remove participant';
+                messageDiv.className = 'error';
+                messageDiv.classList.remove('hidden');
+              }
+
+              setTimeout(() => {
+                messageDiv.classList.add('hidden');
+              }, 4000);
+            } catch (err) {
+              console.error('Error removing participant:', err);
+              messageDiv.textContent = 'Failed to remove participant. Please try again.';
+              messageDiv.className = 'error';
+              messageDiv.classList.remove('hidden');
+            }
+          });
+        });
       });
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
